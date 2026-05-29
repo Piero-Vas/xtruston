@@ -1,75 +1,31 @@
-class InspectionModel {
-  final String id;
-  final String name;
-  final String category;
-  final String photoPath;
-  final String observation;
-  final String status; // 'pending', 'synced', 'conflict'
-  final DateTime createdAt;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  InspectionModel({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.photoPath,
-    required this.observation,
-    required this.status,
-    required this.createdAt,
-  });
+part 'inspection_model.freezed.dart';
+part 'inspection_model.g.dart';
 
-  InspectionModel copyWith({
-    String? id,
-    String? name,
-    String? category,
-    String? photoPath,
-    String? observation,
-    String? status,
-    DateTime? createdAt,
-  }) {
-    return InspectionModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      category: category ?? this.category,
-      photoPath: photoPath ?? this.photoPath,
-      observation: observation ?? this.observation,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
+@freezed
+abstract class InspectionModel with _$InspectionModel {
+  const factory InspectionModel({
+    required String id,
+    required String name,
+    required String category,
+    required String photoPath,
+    required String observation,
+    required String status, // 'pending', 'synced', 'conflict'
+    required DateTime createdAt,
+  }) = _InspectionModel;
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'category': category,
-      'photoPath': photoPath,
-      'observation': observation,
-      'status': status,
-      'createdAt': createdAt.toIso8601String(),
-    };
-  }
+  // Constructor privado requerido para definir métodos y getters personalizados
+  const InspectionModel._();
 
+  factory InspectionModel.fromJson(Map<String, dynamic> json) =>
+      _$InspectionModelFromJson(json);
+
+  // Mapeador auxiliar para mantener compatibilidad con Hive
   factory InspectionModel.fromMap(Map<dynamic, dynamic> map) {
-    return InspectionModel(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      category: map['category'] as String,
-      photoPath: map['photoPath'] as String,
-      observation: map['observation'] as String? ?? '',
-      status: map['status'] as String? ?? 'pending',
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'] as String)
-          : DateTime.now(),
-    );
+    return InspectionModel.fromJson(Map<String, dynamic>.from(map));
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'category': category,
-      'observation': observation,
-      'createdAt': createdAt.toIso8601String(),
-    };
-  }
+  // Mapeador auxiliar para mantener compatibilidad con el resto del sistema
+  Map<String, dynamic> toMap() => toJson();
 }

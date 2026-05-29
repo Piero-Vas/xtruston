@@ -52,6 +52,7 @@ class _CreateInspectionPageState extends State<CreateInspectionPage> {
     if (_photoPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          duration: Duration(seconds: 1),
           content: Text('Es obligatorio tomar una foto para registrar la inspección.'),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,

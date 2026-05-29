@@ -87,6 +87,7 @@ class _HomePageState extends State<HomePage> {
               if (state is Syncing) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
+                    duration: Duration(seconds: 1),
                     content: Row(
                       children: [
                         const SizedBox(
@@ -101,13 +102,13 @@ class _HomePageState extends State<HomePage> {
                         Text('Sincronizando ${state.pendingCount} registro(s)...'),
                       ],
                     ),
-                    duration: const Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
               } else if (state is SyncSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
+                    duration: Duration(seconds: 1),
                     content: Text(state.message),
                     backgroundColor: Colors.green[700],
                     behavior: SnackBarBehavior.floating,
@@ -116,6 +117,7 @@ class _HomePageState extends State<HomePage> {
               } else if (state is SyncFailed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
+                    duration: Duration(seconds: 1),
                     content: Text(state.error),
                     backgroundColor: Colors.red[700],
                     behavior: SnackBarBehavior.floating,

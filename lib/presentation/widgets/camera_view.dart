@@ -143,7 +143,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al tomar foto: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(duration: Duration(seconds: 1),content: Text('Error al tomar foto: $e'), backgroundColor: Colors.redAccent),
         );
       }
     } finally {

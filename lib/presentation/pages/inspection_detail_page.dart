@@ -40,6 +40,7 @@ class _InspectionDetailPageState extends State<InspectionDetailPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
+        duration: Duration(seconds: 1),
         content: Text('Observación guardada. Subiendo actualización...'),
         behavior: SnackBarBehavior.floating,
       ),
