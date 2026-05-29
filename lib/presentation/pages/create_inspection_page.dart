@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
-import '../../domain/models/inspection_model.dart';
-import '../../logic/cubits/inspection_cubit.dart';
-import '../../logic/cubits/sync_cubit.dart';
-import '../widgets/camera_view.dart';
+import 'package:test_flutter/logic/cubits/create_inspection_form_cubit.dart';
+import 'package:test_flutter/logic/cubits/inspection_cubit.dart';
+import 'package:test_flutter/logic/cubits/sync_cubit.dart';
+import 'package:test_flutter/presentation/widgets/app_snackbar.dart';
+import 'package:test_flutter/presentation/widgets/camera_view.dart';
 
 class CreateInspectionPage extends StatefulWidget {
   const CreateInspectionPage({super.key});
@@ -22,7 +22,6 @@ class _CreateInspectionPageState extends State<CreateInspectionPage> {
   final List<String> _categories = ['Seguridad', 'Mantenimiento', 'Limpieza'];
   String? _selectedCategory;
   String? _photoPath;
-  final _uuid = const Uuid();
 
   @override
   void dispose() {
@@ -44,139 +43,148 @@ class _CreateInspectionPageState extends State<CreateInspectionPage> {
     }
   }
 
-  void _saveInspection() {
+  void _saveInspection(BuildContext context) {
+    // Validar visualmente campos locales del formulario
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    if (_photoPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          duration: Duration(seconds: 1),
-          content: Text('Es obligatorio tomar una foto para registrar la inspección.'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    final newInspection = InspectionModel(
-      id: _uuid.v4(),
-      name: _nameController.text.trim(),
-      category: _selectedCategory!,
-      photoPath: _photoPath!,
-      observation: _observationController.text.trim(),
-      status: 'pending', // Siempre inicia como pendiente de sincronización
-      createdAt: DateTime.now(),
-    );
-
-    // Guardar en base de datos local y refrescar lista
-    context.read<InspectionCubit>().addInspection(newInspection);
-    
-    // Disparar sincronización asíncrona de inmediato (se ejecutará si hay conexión)
-    context.read<SyncCubit>().syncPendingQueue();
-
-    Navigator.pop(context);
+    // Despachar la lógica al Cubit del Formulario
+    context.read<CreateInspectionFormCubit>().submit(
+          name: _nameController.text,
+          category: _selectedCategory,
+          photoPath: _photoPath,
+          observation: _observationController.text,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nueva Inspección', style: TextStyle(fontWeight: FontWeight.bold)),
+    return BlocProvider(
+      create: (context) => CreateInspectionFormCubit(
+        inspectionCubit: context.read<InspectionCubit>(),
+        syncCubit: context.read<SyncCubit>(),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Entrada: Nombre del Lugar
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre del Lugar *',
-                  hintText: 'Ej. Planta 1, Almacén A, etc.',
-                  prefixIcon: const Icon(Icons.place_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Por favor ingresa el nombre del lugar.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
+      child: BlocConsumer<CreateInspectionFormCubit, CreateInspectionFormState>(
+        listener: (context, state) {
+          if (state is CreateInspectionFormSuccess) {
+            Navigator.pop(context);
+          } else if (state is CreateInspectionFormError) {
+            AppSnackBar.showError(context, state.error);
+          }
+        },
+        builder: (context, state) {
+          final isSubmitting = state is CreateInspectionFormSubmitting;
 
-              // Dropdown: Categoría
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategory,
-                decoration: InputDecoration(
-                  labelText: 'Categoría *',
-                  prefixIcon: const Icon(Icons.category_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    _selectedCategory = val;
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Por favor selecciona una categoría.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Nueva Inspección', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            body: isSubmitting
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Guardando inspección...', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Entrada: Nombre del Lugar
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              labelText: 'Nombre del Lugar *',
+                              hintText: 'Ej. Planta 1, Almacén A, etc.',
+                              prefixIcon: const Icon(Icons.place_outlined),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Por favor ingresa el nombre del lugar.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
 
-              // Captura de Foto (Cámara Real)
-              const Text(
-                'Evidencia Fotográfica *',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-              _buildPhotoPlaceholder(),
-              const SizedBox(height: 24),
+                          // Dropdown: Categoría
+                          DropdownButtonFormField<String>(
+                            initialValue: _selectedCategory,
+                            decoration: InputDecoration(
+                              labelText: 'Categoría *',
+                              prefixIcon: const Icon(Icons.category_outlined),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            items: _categories.map((category) {
+                              return DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              setState(() {
+                                _selectedCategory = val;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Por favor selecciona una categoría.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
 
-              // Entrada: Observaciones (Multilínea)
-              TextFormField(
-                controller: _observationController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  labelText: 'Observación (Opcional)',
-                  hintText: 'Describe cualquier hallazgo relevante...',
-                  prefixIcon: const Icon(Icons.comment_outlined),
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 32),
+                          // Captura de Foto (Cámara Real)
+                          const Text(
+                            'Evidencia Fotográfica *',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildPhotoPlaceholder(),
+                          const SizedBox(height: 24),
 
-              // Botón de Guardar
-              ElevatedButton.icon(
-                onPressed: _saveInspection,
-                icon: const Icon(Icons.save_rounded),
-                label: const Text('Registrar Inspección', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
+                          // Entrada: Observaciones (Multilínea)
+                          TextFormField(
+                            controller: _observationController,
+                            maxLines: 4,
+                            decoration: InputDecoration(
+                              labelText: 'Observación (Opcional)',
+                              hintText: 'Describe cualquier hallazgo relevante...',
+                              prefixIcon: const Icon(Icons.comment_outlined),
+                              alignLabelWithHint: true,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Botón de Guardar
+                          ElevatedButton.icon(
+                            onPressed: () => _saveInspection(context),
+                            icon: const Icon(Icons.save_rounded),
+                            label: const Text('Registrar Inspección', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+          );
+        },
       ),
     );
   }

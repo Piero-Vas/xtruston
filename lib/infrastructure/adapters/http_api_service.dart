@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
-import '../../../domain/models/inspection_model.dart';
-import '../../../domain/ports/api_service_port.dart';
+import 'package:test_flutter/domain/models/inspection_model.dart';
+import 'package:test_flutter/domain/ports/api_service_port.dart';
 
 class HttpApiService implements ApiServicePort {
   final http.Client _client;

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../../../domain/ports/connectivity_service_port.dart';
+import 'package:test_flutter/domain/ports/connectivity_service_port.dart';
 
 class ConnectivityServiceImpl implements ConnectivityServicePort {
   final Connectivity _connectivity;

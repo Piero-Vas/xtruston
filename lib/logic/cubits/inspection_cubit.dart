@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/models/inspection_model.dart';
-import '../../domain/ports/inspection_repository_port.dart';
+import 'package:test_flutter/domain/models/inspection_model.dart';
+import 'package:test_flutter/domain/ports/inspection_repository_port.dart';
 
 // --- ESTADOS ---
 abstract class InspectionState {}

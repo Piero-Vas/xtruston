@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/ports/api_service_port.dart';
-import '../../domain/ports/connectivity_service_port.dart';
-import '../../domain/ports/inspection_repository_port.dart';
-import 'inspection_cubit.dart';
+import 'package:test_flutter/domain/ports/api_service_port.dart';
+import 'package:test_flutter/domain/ports/connectivity_service_port.dart';
+import 'package:test_flutter/domain/ports/inspection_repository_port.dart';
+import 'package:test_flutter/logic/cubits/inspection_cubit.dart';
 
 // --- ESTADOS ---
 abstract class SyncState {}

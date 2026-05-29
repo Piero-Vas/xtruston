@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
-import '../../../domain/models/inspection_model.dart';
-import '../../../domain/ports/inspection_repository_port.dart';
+import 'package:test_flutter/domain/models/inspection_model.dart';
+import 'package:test_flutter/domain/ports/inspection_repository_port.dart';
 
 class HiveInspectionRepository implements InspectionRepositoryPort {
   static const String _boxName = 'inspections_box';

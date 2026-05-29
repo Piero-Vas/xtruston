@@ -1,4 +1,4 @@
-import '../models/inspection_model.dart';
+import 'package:test_flutter/domain/models/inspection_model.dart';
 
 abstract class ApiServicePort {
   /// Envía la metadata de la inspección y foto al backend mock.

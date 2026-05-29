@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:test_flutter/presentation/widgets/app_snackbar.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView({super.key});
@@ -142,9 +143,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(duration: Duration(seconds: 1),content: Text('Error al tomar foto: $e'), backgroundColor: Colors.redAccent),
-        );
+        AppSnackBar.showError(context, 'Error al tomar foto: $e');
       }
     } finally {
       if (mounted) {

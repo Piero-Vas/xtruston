@@ -1,4 +1,4 @@
-import '../models/inspection_model.dart';
+import 'package:test_flutter/domain/models/inspection_model.dart';
 
 abstract class InspectionRepositoryPort {
   /// Obtiene todas las inspecciones locales ordenadas por fecha descendente.
