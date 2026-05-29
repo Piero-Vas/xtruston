@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import 'package:test_flutter/logic/cubits/inspection_cubit.dart';
 import 'package:test_flutter/logic/cubits/sync_cubit.dart';
 import 'package:test_flutter/domain/models/inspection_model.dart';
 import 'package:test_flutter/presentation/widgets/app_snackbar.dart';
 import 'package:test_flutter/presentation/widgets/connection_status_indicator.dart';
 import 'package:test_flutter/presentation/widgets/inspection_card.dart';
+import 'package:test_flutter/presentation/widgets/slide_fade_transition.dart';
 import 'package:test_flutter/presentation/pages/create_inspection_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -90,13 +92,21 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEEF2F6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.assignment_outlined, size: 64, color: Color(0xFF94A3B8)),
+                        Lottie.network(
+                          'https://assets10.lottiefiles.com/packages/lf20_yzn8y7az.json',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEEF2F6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.assignment_outlined, size: 64, color: Color(0xFF94A3B8)),
+                            );
+                          },
                         ),
                         const SizedBox(height: 24),
                         const Text(
@@ -150,7 +160,10 @@ class _HomePageState extends State<HomePage> {
                         itemCount: list.length,
                         itemBuilder: (context, index) {
                           final item = list[index];
-                          return InspectionCard(item: item);
+                          return SlideFadeTransition(
+                            index: index,
+                            child: InspectionCard(item: item),
+                          );
                         },
                       ),
                     ),

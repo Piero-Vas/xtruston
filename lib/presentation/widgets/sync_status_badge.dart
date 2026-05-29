@@ -35,43 +35,63 @@ class SyncStatusBadge extends StatelessWidget {
         break;
     }
 
-    // Diseño detallado y alargado para la pantalla de detalle (Píldora premium con punto)
-    if (isLarge) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: baseColor.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: baseColor.withValues(alpha: 0.25), width: 1),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: baseColor,
-                shape: BoxShape.circle,
-              ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: baseColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: -0.1,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+            child: child,
+          ),
+        );
+      },
+      child: isLarge
+          ? _buildLargeBadge(baseColor, label)
+          : _buildCompactBadge(baseColor, label, icon),
+    );
+  }
 
-    // Diseño compacto para las tarjetas de la lista principal
+  Widget _buildLargeBadge(Color baseColor, String label) {
     return Container(
+      key: ValueKey('large_$status'),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: baseColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: baseColor.withValues(alpha: 0.25), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: baseColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: baseColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactBadge(Color baseColor, String label, IconData icon) {
+    return Container(
+      key: ValueKey('compact_$status'),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: baseColor.withValues(alpha: 0.08),
