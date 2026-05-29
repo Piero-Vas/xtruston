@@ -8,13 +8,15 @@ El proyecto ha sido diseñado bajo los estrictos principios de la **Arquitectura
 
 ## 📐 Diseño de Arquitectura: Hexagonal (Ports & Adapters)
 
-Para aislar por completo el núcleo de nuestra aplicación de las dependencias externas (como bases de datos locales, clientes de red HTTP y sensores de hardware), estructuramos la aplicación en tres capas concéntricas bien definidas:
+Para aislar por completo el núcleo de nuestra aplicación de las dependencias externas (como bases de datos locales, clientes de red HTTP y sensores de hardware), estructuramos la aplicación en capas concéntricas bien definidas:
 
 ```
 lib/
 ├── domain/                         # Capa de Dominio (Núcleo Puro)
 │   ├── models/
-│   │   └── inspection_model.dart   # Entidad pura del dominio
+│   │   ├── inspection_model.dart   # Entidad inmutable (generada con Freezed)
+│   │   ├── inspection_model.freezed.dart
+│   │   └── inspection_model.g.dart
 │   └── ports/                      # Contratos / Puertos (Interfaces)
 │       ├── api_service_port.dart
 │       ├── connectivity_service_port.dart
@@ -25,51 +27,58 @@ lib/
 │       ├── hive_inspection_repository.dart
 │       └── http_api_service.dart
 ├── logic/                          # Capa de Aplicación (Casos de Uso)
-│   └── cubits/                     # Control de Estado (Inbound Ports / Controllers)
+│   └── cubits/                     # Control de Estado y Formularios
 │       ├── inspection_cubit.dart
-│       └── sync_cubit.dart
+│       ├── sync_cubit.dart
+│       └── create_inspection_form_cubit.dart # Validador y orquestador del formulario
 └── presentation/                   # Capa de Presentación (UI / Driving Adapters)
-    ├── pages/                      # HomePage, CreateInspectionPage, InspectionDetailPage
-    └── widgets/                    # CameraView, etc.
+    ├── pages/                      # Pantallas principales
+    │   ├── home_page.dart          # Panel principal / Dashboard minimalista
+    │   ├── create_inspection_page.dart
+    │   └── inspection_detail_page.dart
+    ├── theme/
+    │   └── app_theme.dart          # Sistema de diseño unificado (Slate & Indigo)
+    └── widgets/                    # Widgets reutilizables y atómicos
+        ├── app_snackbar.dart       # Gestor unificado de notificaciones flotantes
+        ├── camera_view.dart        # Pantalla de cámara integrada
+        ├── camera_stream_preview.dart # Visor de la transmisión en tiempo real de la cámara
+        ├── camera_error_view.dart  # Pantalla de error de inicialización de cámara
+        ├── connection_status_indicator.dart # Indicador de red en AppBar
+        ├── inspection_card.dart    # Tarjeta de celda de la lista
+        ├── photo_placeholder.dart  # Contenedor de selección/cambio de foto
+        ├── sync_status_badge.dart  # Distintivo visual del estado de sincronización
+        └── sync_warning_card.dart  # Tarjeta de alertas y reintentos manuales de sync
 ```
-
-### 1. El Dominio (Domain)
-*   **Inspección (`InspectionModel`)**: La entidad de negocio que representa un reporte de campo.
-*   **Puertos (Ports)**: Interfaces de Dart puras que declaran cómo se comunicará el núcleo con el mundo exterior.
-    *   `InspectionRepositoryPort`: Define el contrato para guardar y obtener reportes locales.
-    *   `ApiServicePort`: Define el contrato para subir los reportes al servidor.
-    *   `ConnectivityServicePort`: Define el contrato para monitorear el estado del internet.
-
-### 2. La Infraestructura (Adapters)
-Los adaptadores implementan las interfaces del dominio utilizando librerías específicas:
-*   `HiveInspectionRepository`: Implementa la base de datos local usando **Hive**.
-*   `HttpApiService`: Se comunica con el API mock de **httpbin.org** usando la librería `http`. Implementa la lógica de reintento ante errores de red (500) y la detección de conflictos (409).
-*   `ConnectivityServiceImpl`: Implementa el sensor de red usando **`connectivity_plus`**.
-
-### 3. La Lógica de Aplicación (Cubits)
-Los Cubits (`InspectionCubit` y `SyncCubit`) representan nuestros casos de uso. Gracias al principio de **Inversión de Dependencias (DIP)**:
-*   Los Cubits **no importan ni conocen** a Hive, a httpbin ni a connectivity_plus.
-*   Solo interactúan a través de los **Puertos abstractos** del dominio.
-*   Esto nos permite realizar pruebas unitarias hiper-limpias implementando dobles de prueba manuales (`FakeBox`, `MockApiService` y `MockConnectivityService`) en segundos, sin requerir pesados generadores de código (`build_runner` / Mockito).
 
 ---
 
 ## 🛠️ Decisiones Técnicas Clave
 
 ### 1. Gestión de Estado: Cubit (`flutter_bloc`)
-*   **Por qué Cubit**: Para este reto técnico seleccionamos **Cubit** por encima de BLoC clásico. Cubit reduce significativamente la cantidad de código repetitivo al no requerir la definición de clases de eventos (usa funciones/métodos directos). Mantiene la misma robustez en la separación de interfaz y lógica de negocio, y nos permite realizar pruebas unitarias estructuradas independientes del contexto visual utilizando `bloc_test`.
+*   **Por qué Cubit**: Seleccionamos **Cubit** por encima de BLoC clásico para la gestión de estados. Reduce significativamente la cantidad de código repetitivo al no requerir la definición de clases de eventos (usa funciones directas). Conserva la misma robustez y separación de responsabilidades, facilitando pruebas unitarias estructuradas independientes de la UI.
+*   **Formularios desacoplados**: Implementamos un Cubit exclusivo (`CreateInspectionFormCubit`) que aísla la validación de entrada de datos y previene que la capa visual asuma responsabilidades de negocio (como generar UUIDs o instanciar entidades).
 
 ### 2. Persistencia Local: Hive (`hive`)
-*   **Por qué Hive**: Optamos por **Hive** por su rendimiento excepcional (es una base de datos NoSQL clave-valor ultrarrápida escrita puramente en Dart) y su facilidad de integración. 
+*   **Por qué Hive**: Elegimos **Hive** por su velocidad y rendimiento excepcional al ser una base de datos NoSQL clave-valor escrita puramente en Dart.
 *   **Ventajas**:
-    *   **Sin dependencias nativas complejas**: A diferencia de Drift o sqflite, Hive compila directamente en Dart puro y no genera conflictos en plataformas de desarrollo.
-    *   **Uso como Adaptador**: Permite instanciar la base de datos como un adaptador concreto (`HiveInspectionRepository`) que se inyecta en el puerto del repositorio de forma transparente.
+    *   **Sin dependencias nativas complejas**: A diferencia de SQLite o Drift, compila de forma directa en Dart puro, eliminando conflictos de Gradle en Android o CocoaPods en iOS.
+    *   **Hexagonalidad intacta**: No acoplamos la entidad de dominio a Hive. El mapeo se realiza de forma manual en la capa de infraestructura, manteniendo el dominio 100% puro.
 
 ### 3. Cámara en Vivo (`camera`)
-*   **Por qué camera**: Para cumplir con el requerimiento de usar la cámara real del dispositivo (y no un picker de galería o invocar la app de cámara del sistema operativo mediante un intent externo). La librería oficial `camera` de Flutter nos permite instanciar un `CameraController`, desplegar un widget de vista previa (`CameraPreview`) y capturar la imagen en tiempo de ejecución, guardándola de forma privada en el almacenamiento temporal de la aplicación.
+*   **Por qué camera**: Para cumplir con el requerimiento de usar la cámara integrada de la app sin delegar la captura a intents o aplicaciones externas del sistema operativo. La librería oficial `camera` nos permite instanciar el visor nativo en un widget (`CameraPreview`) y capturar la imagen de forma directa en tiempo de ejecución.
 
 ### 4. Compresión de Imagen (Algoritmo integrado en Flutter)
-*   Las imágenes de cámaras móviles modernas pueden pesar más de 5MB. Subir esto a un backend mock en conexiones móviles lentas es inviable. Para comprimir la imagen sin añadir librerías nativas adicionales, utilizamos el motor gráfico nativo de Flutter (`ui.instantiateImageCodec`). El flujo decodifica la imagen capturada, la redimensiona a un ancho máximo de 1080px (manteniendo el aspecto) y la vuelve a codificar en PNG con calidad reducida, logrando archivos de apenas ~200KB sin pérdida apreciable de nitidez para una inspección.
+*   Para evitar subir archivos pesados (>5MB) en conexiones móviles inestables sin agregar dependencias nativas complejas, utilizamos el motor gráfico nativo de Flutter (`ui.instantiateImageCodec`). Redimensionamos la foto a un ancho máximo de 1080px (manteniendo el aspecto) y la volvemos a codificar en PNG comprimido, reduciendo el peso a ~200KB sin pérdida apreciable de nitidez.
+
+### 5. Inmutabilidad de Datos con Freezed
+*   **Por qué Freezed**: Adoptamos `freezed` para definir el modelo `InspectionModel`. Esto nos garantiza la inmutabilidad de los datos de las inspecciones y nos autogenera los métodos `copyWith`, serialización JSON (`toJson` / `fromJson`) y operadores de igualdad `==` y `hashCode` automáticos, previniendo fallos por mutación de estado accidental.
+
+### 6. Sistema de Diseño Plano y Minimalista
+*   **Por qué**: Implementamos un sistema visual moderno Slate e Indigo para ofrecer una interfaz premium:
+    *   Tarjetas planas sin sombras pesadas, delimitadas por bordes ultra finos de 1px.
+    *   Inputs modernos con relleno Slate-100 y enfoque en color Indigo.
+    *   Resumen del panel de estado estadísticas en la pantalla de inicio.
+    *   Transición fluida mediante animaciones `Hero` nativas al abrir registros.
 
 ---
 
@@ -83,13 +92,14 @@ Los Cubits (`InspectionCubit` y `SyncCubit`) representan nuestros casos de uso. 
 1. **Clonar el repositorio**:
    ```bash
    git clone <URL_DEL_REPOSITORIO>
-   cd test_flutter
+   cd xtruston
    ```
-2. **Obtener dependencias**:
+2. **Obtener dependencias y generar código**:
    ```bash
    flutter pub get
+   flutter pub run build_runner build --delete-conflicting-outputs
    ```
-3. **Ejecutar pruebas unitarias**:
+3. **Ejecutar pruebas unitarias e instrumentadas**:
    ```bash
    flutter test
    ```
@@ -109,8 +119,8 @@ La aplicación opera bajo la siguiente lógica de sincronización:
 3. **Cola de Reintento**: Si el dispositivo está sin conexión, se conserva el estado `pending`. Al restablecerse la conexión, el `SyncCubit` lee todas las inspecciones locales en estado `pending` y las procesa en orden secuencial.
 4. **Manejo de Conflictos (Simulado - 50% de error)**: 
    - El adaptador `HttpApiService` tiene una lógica de depuración que simula errores aleatorios del 50%.
-   - Si el envío falla por un error temporal de red o de servidor (500), el registro continúa marcado como `pending` para volver a intentarse en el siguiente ciclo.
-   - Si el servidor responde con un conflicto de negocio permanente (HTTP 409 Conflict), el estado se actualiza localmente a `conflict`. El usuario verá una alerta visual en la pantalla principal y en el detalle, y podrá editar la observación de la inspección y forzar una re-sincronización manual en caliente.
+   - Si el envío falla por un error de red o de servidor (500), el registro continúa marcado como `pending` para volver a intentarse en el siguiente ciclo.
+   - Si el servidor responde con un conflicto de negocio permanente (HTTP 409 Conflict), el estado se cambia a `conflict`. El usuario verá una alerta visual (con píldora roja) y podrá editar la observación de la inspección y forzar una re-sincronización manual en caliente mediante el botón "Sincronizar ahora".
 
 ---
 
