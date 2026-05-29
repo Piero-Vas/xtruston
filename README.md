@@ -73,12 +73,8 @@ lib/
 ### 5. Inmutabilidad de Datos con Freezed
 *   **Por qué Freezed**: Adoptamos `freezed` para definir el modelo `InspectionModel`. Esto nos garantiza la inmutabilidad de los datos de las inspecciones y nos autogenera los métodos `copyWith`, serialización JSON (`toJson` / `fromJson`) y operadores de igualdad `==` y `hashCode` automáticos, previniendo fallos por mutación de estado accidental.
 
-### 6. Sistema de Diseño Plano y Minimalista
-*   **Por qué**: Implementamos un sistema visual moderno Slate e Indigo para ofrecer una interfaz premium:
-    *   Tarjetas planas sin sombras pesadas, delimitadas por bordes ultra finos de 1px.
-    *   Inputs modernos con relleno Slate-100 y enfoque en color Indigo.
-    *   Resumen del panel de estado estadísticas en la pantalla de inicio.
-    *   Transición fluida mediante animaciones `Hero` nativas al abrir registros.
+### 6. Detección de Conectividad (`connectivity_plus`)
+*   **Por qué connectivity_plus**: Para implementar la cola offline-first, es crucial detectar el estado de conexión del dispositivo. Este paquete nos permite suscribirnos a los cambios de red en tiempo real. Cuando la conexión se restablece, el `SyncCubit` se notifica inmediatamente para desencadenar de forma transparente la sincronización de las inspecciones locales pendientes de subir.
 
 ---
 
@@ -136,9 +132,10 @@ La aplicación opera bajo la siguiente lógica de sincronización:
 
 Este proyecto fue desarrollado en colaboración con un Asistente de IA (Antigravity por Google DeepMind).
 *   **Partes en las que se utilizó**:
-    - Estructuración y migración hacia el patrón de Arquitectura Hexagonal Limpia (separación en carpetas `domain`, `infrastructure`, `logic`, `presentation`).
-    - Creación de los Puertos (Interfaces) y Adaptadores concretos que los implementan.
-    - Configuración y diseño de los mocks manuales del test suite de la cola de sincronización.
+    - Diseño y estructuración de la Arquitectura Hexagonal Limpia (Ports & Adapters) separando las capas de dominio, lógica de aplicación, infraestructura y presentación.
+    - Configuración inicial de los modelos inmutables y generadores de código.
+    - Soporte en la lógica de la cola de sincronización offline-first, el manejo de reintentos automáticos y simulación de conflictos.
+    - Apoyo en la optimización general de la interfaz gráfica y la modularización de componentes visuales independientes.
 *   **Métodos de Validación**:
-    - Se corrió el set de pruebas unitarias (`flutter test`) simulando streams de conectividad.
-    - Se realizaron validaciones y revisiones de compilación de Gradle (`build.gradle.kts`) en Android para asegurar la compatibilidad con SDKs antiguos y modernos (fijando compileSdk en 36).
+    - Ejecución de análisis estático (`flutter analyze`) para asegurar que no existan advertencias ni errores en el código Dart.
+    - Desarrollo y ejecución de pruebas unitarias exhaustivas (`flutter test`) cubriendo la lógica de la cola de sincronización, almacenamiento en base de datos local y comportamiento de red.
