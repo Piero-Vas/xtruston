@@ -14,8 +14,7 @@ class InspectionCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
+      elevation: 0, // Plano
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -29,25 +28,35 @@ class InspectionCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Miniatura de la foto a la izquierda
-              SizedBox(
-                width: 100,
-                child: Image.file(
-                  File(item.photoPath),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    );
-                  },
+              // Miniatura de la foto con padding interno y bordes redondeados (estética de marco fotográfico)
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Hero(
+                  tag: 'photo_${item.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: Image.file(
+                        File(item.photoPath),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: const Color(0xFFF1F5F9),
+                            child: const Icon(Icons.broken_image_outlined, color: Color(0xFF94A3B8)),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              
+
               // Datos del registro
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -58,35 +67,33 @@ class InspectionCard extends StatelessWidget {
                           Text(
                             item.name,
                             style: const TextStyle(
+                              color: Color(0xFF0F172A), // Slate-900
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
+                              letterSpacing: -0.3,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              item.category,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[800],
-                                fontWeight: FontWeight.w500,
-                              ),
+                          Text(
+                            item.category,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B), // Slate-500
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      // Fecha
+                      // Fecha formateada sutilmente
                       Text(
                         _formatDate(item.createdAt),
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF94A3B8), // Slate-400
+                        ),
                       ),
                     ],
                   ),
@@ -95,7 +102,7 @@ class InspectionCard extends StatelessWidget {
 
               // Indicador de estado de sincronización a la derecha
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Center(
                   child: SyncStatusBadge(status: item.status),
                 ),
@@ -108,6 +115,11 @@ class InspectionCard extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year;
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year $hour:$minute';
   }
 }

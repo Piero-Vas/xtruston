@@ -12,60 +12,88 @@ class SyncStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    IconData icon;
-    Color color;
+    Color baseColor;
     String label;
+    IconData icon;
 
     switch (status) {
       case 'synced':
-        icon = Icons.check_circle_rounded;
-        color = Colors.green;
+        baseColor = const Color(0xFF10B981); // Emerald-500 (Verde premium)
         label = 'Sincronizado';
+        icon = Icons.check_circle_outline_rounded;
         break;
       case 'conflict':
-        icon = Icons.error_rounded;
-        color = Colors.red;
+        baseColor = const Color(0xFFEF4444); // Red-500 (Rojo premium)
         label = 'Conflicto';
+        icon = Icons.error_outline_rounded;
         break;
       case 'pending':
       default:
-        icon = Icons.watch_later_rounded;
-        color = Colors.orange;
+        baseColor = const Color(0xFFF59E0B); // Amber-500 (Naranja premium)
         label = 'Pendiente';
+        icon = Icons.history_rounded;
         break;
     }
 
-    // Diseño detallado y alargado para la pantalla de detalle
+    // Diseño detallado y alargado para la pantalla de detalle (Píldora premium con punto)
     if (isLarge) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color, width: 1.5),
+          color: baseColor.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: baseColor.withValues(alpha: 0.25), width: 1),
         ),
-        child: Text(
-          label,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: baseColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: baseColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                letterSpacing: -0.1,
+              ),
+            ),
+          ],
         ),
       );
     }
 
     // Diseño compacto para las tarjetas de la lista principal
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 9,
-            color: color,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: baseColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: baseColor.withValues(alpha: 0.2), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: baseColor, size: 13),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: baseColor,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.2,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
