@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:test_flutter/presentation/widgets/app_snackbar.dart';
+import 'package:test_flutter/presentation/widgets/camera_stream_preview.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView({super.key});
@@ -134,7 +135,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     try {
       final XFile rawPhoto = await _controller!.takePicture();
-      
+
       // Aplicamos compresión asíncrona antes de retornar
       final String compressedPath = await _compressAndResizePhoto(rawPhoto.path);
 
@@ -156,8 +157,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -184,7 +183,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            
+
             // Área de previsualización
             Expanded(
               child: ClipRRect(
@@ -192,7 +191,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                 child: Container(
                   width: double.infinity,
                   color: Colors.grey[900],
-                  child: _buildCameraPreview(size),
+                  child: CameraStreamPreview(
+                    isInitializing: _isInitializing,
+                    errorMessage: _errorMessage,
+                    controller: _controller,
+                    onRetry: () {
+                      setState(() {
+                        _isInitializing = true;
+                        _errorMessage = null;
+                      });
+                      _initializeCamera();
+                    },
+                  ),
                 ),
               ),
             ),
@@ -231,72 +241,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCameraPreview(Size size) {
-    if (_isInitializing) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Colors.deepPurpleAccent),
-            SizedBox(height: 16),
-            Text('Inicializando cámara real...', style: TextStyle(color: Colors.white70)),
-          ],
-        ),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 15),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Reintentar'),
-                onPressed: () {
-                  setState(() {
-                    _isInitializing = true;
-                    _errorMessage = null;
-                  });
-                  _initializeCamera();
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return const Center(
-        child: Text('Cámara no disponible', style: TextStyle(color: Colors.white70)),
-      );
-    }
-
-    // Centramos y recortamos el preview para llenar el contenedor
-    final cameraValue = _controller!.value;
-    final scale = size.aspectRatio * cameraValue.aspectRatio;
-
-    return ClipRect(
-      child: Transform.scale(
-        scale: scale < 1.0 ? 1.0 / scale : scale,
-        child: Center(
-          child: CameraPreview(_controller!),
         ),
       ),
     );

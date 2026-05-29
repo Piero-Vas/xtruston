@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_flutter/logic/cubits/create_inspection_form_cubit.dart';
@@ -6,6 +5,7 @@ import 'package:test_flutter/logic/cubits/inspection_cubit.dart';
 import 'package:test_flutter/logic/cubits/sync_cubit.dart';
 import 'package:test_flutter/presentation/widgets/app_snackbar.dart';
 import 'package:test_flutter/presentation/widgets/camera_view.dart';
+import 'package:test_flutter/presentation/widgets/photo_placeholder.dart';
 
 class CreateInspectionPage extends StatefulWidget {
   const CreateInspectionPage({super.key});
@@ -150,7 +150,10 @@ class _CreateInspectionPageState extends State<CreateInspectionPage> {
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           const SizedBox(height: 8),
-                          _buildPhotoPlaceholder(),
+                          PhotoPlaceholder(
+                            photoPath: _photoPath,
+                            onTap: _capturePhoto,
+                          ),
                           const SizedBox(height: 24),
 
                           // Entrada: Observaciones (Multilínea)
@@ -185,75 +188,6 @@ class _CreateInspectionPageState extends State<CreateInspectionPage> {
                   ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildPhotoPlaceholder() {
-    if (_photoPath != null) {
-      return Card(
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 3,
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: Image.file(
-                File(_photoPath!),
-                fit: BoxFit.cover,
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              color: Colors.black.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton.icon(
-                    onPressed: _capturePhoto,
-                    icon: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
-                    label: const Text(
-                      'Cambiar Foto',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: _capturePhoto,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 180,
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[300]!, width: 2, style: BorderStyle.solid),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.camera_alt_outlined, size: 48, color: Colors.grey[600]),
-            const SizedBox(height: 12),
-            Text(
-              'Tomar Foto en Vivo',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[800]),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '(Cámara nativa integrada)',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-            ),
-          ],
-        ),
       ),
     );
   }
